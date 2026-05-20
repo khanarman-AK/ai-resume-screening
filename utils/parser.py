@@ -2,7 +2,10 @@ import PyPDF2
 import re
 import spacy
 
-nlp = spacy.load("en_core_web_sm")
+try:
+    nlp = spacy.load("en_core_web_sm")
+except:
+    nlp = spacy.blank("en")
 
 # Extract text
 def extract_text_from_pdf(file_path):
