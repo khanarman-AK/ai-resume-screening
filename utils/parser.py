@@ -24,18 +24,73 @@ def clean_text(text):
     return text
 
 # 🔥 ADD THIS HERE (new function)
-def extract_skills_nlp(text):
-    doc = nlp(text)
+skills_db = [
 
-    skills_db = [
-        "python", "java", "machine learning", "data science",
-        "sql", "excel", "flask", "django", "html", "css"
-    ]
+    # Programming
+    "python", "java", "c++", "javascript", "typescript",
+    "html", "css", "react", "nodejs", "flask", "django",
+    "spring boot", "php", "ruby", "golang", "kotlin",
+
+    # Data Science / AI
+    "machine learning", "deep learning", "nlp",
+    "data science", "tensorflow", "pytorch",
+    "scikit-learn", "pandas", "numpy", "opencv",
+    "generative ai", "llm", "transformers",
+
+    # Cloud / DevOps
+    "aws", "azure", "gcp", "docker", "kubernetes",
+    "jenkins", "terraform", "linux", "github actions",
+
+    # Database
+    "sql", "mysql", "postgresql", "mongodb",
+    "firebase", "oracle", "sqlite",
+
+    # Analytics
+    "excel", "power bi", "tableau", "data analysis",
+    "business analysis", "statistics",
+
+    # Cybersecurity
+    "ethical hacking", "penetration testing",
+    "network security", "cybersecurity",
+    "wireshark", "metasploit",
+
+    # Mobile Development
+    "android", "flutter", "react native", "swift",
+
+    # Marketing
+    "digital marketing", "seo", "sem", "content marketing",
+    "social media marketing", "google analytics",
+
+    # Finance
+    "financial analysis", "accounting", "investment banking",
+    "financial modeling", "sap fico", "tally",
+
+    # HR
+    "recruitment", "talent acquisition",
+    "employee engagement", "payroll",
+
+    # Consulting / Management
+    "strategy", "market research", "business consulting",
+    "project management", "agile", "scrum",
+
+    # Soft Skills
+    "communication", "leadership", "teamwork",
+    "problem solving", "negotiation", "presentation",
+
+    # Tools
+    "git", "github", "jira", "notion", "figma",
+    "canva", "ms office"
+]
+
+
+def extract_skills_nlp(text):
+
+    text = text.lower()
 
     found_skills = set()
 
-    for token in doc:
-        if token.text.lower() in skills_db:
-            found_skills.add(token.text.lower())
+    for skill in skills_db:
+        if skill.lower() in text:
+            found_skills.add(skill)
 
     return list(found_skills)
