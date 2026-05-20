@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resume Ranking</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f9;
+            padding: 30px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .rank {
+            font-weight: bold;
+            color: #007BFF;
+        }
+
+        ul {
+            margin-top: 10px;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+            text-decoration: none;
+            color: #007BFF;
+        }
+
+        .back:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>📊 Resume Ranking Results</h2>
+
+<div class="container">
+
+{% for r in results %}
+    <div class="card">
+
+        <!-- 🏆 Best Match -->
+        {% if loop.index == 1 %}
+            <p style="color:green; font-weight:bold;">🏆 Best Match</p>
+        {% endif %}
+
+        <div class="top">
+            <div>
+                <span class="rank">#{{ loop.index }}</span>
+                <strong>{{ r.name }}</strong>
+            </div>
+
+            <!-- 🎯 Colored Score -->
+            <div style="
+                font-weight:bold;
+                color:
+                {% if r.score > 70 %}green
+                {% elif r.score > 40 %}orange
+                {% else %}red
+                {% endif %}
+            ">
+                {{ r.score }}%
+            </div>
+        </div>
+
+        <!-- 📊 Progress Bar -->
+        <div style="background:#ddd; border-radius:5px; overflow:hidden; height:10px; margin-top:10px;">
+            <div style="width: {{ r.score }}%; background:#28a745; height:100%;"></div>
+        </div>
+
+        <p><strong>Matched Skills:</strong></p>
+        <ul>
+            {% for skill in r.skills %}
+                <li>{{ skill }}</li>
+            {% endfor %}
+        </ul>
+
+    </div>
+{% endfor %}
+
+</div>
+
+<a href="/" class="back">⬅ Try Again</a>
+
+</body>
+</html>
