@@ -1,64 +1,98 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AI Resume Screener</title>
+
+    <title>AI Resume Screening System</title>
+
     <style>
-        body {
-            font-family: Arial;
-            background: #f4f6f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+
+        body{
+            font-family:Arial;
+            background:#f4f6f9;
+            padding:40px;
         }
 
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            width: 400px;
-            box-shadow: 0px 0px 15px rgba(0,0,0,0.1);
-            text-align: center;
+        .container{
+            max-width:700px;
+            margin:auto;
+            background:white;
+            padding:30px;
+            border-radius:10px;
+            box-shadow:0px 4px 10px rgba(0,0,0,0.1);
         }
 
-        h2 {
-            margin-bottom: 20px;
+        h1{
+            text-align:center;
+            color:#007BFF;
+            margin-bottom:30px;
         }
 
-        input, textarea {
-            width: 100%;
-            margin-bottom: 15px;
-            padding: 10px;
+        textarea{
+            width:100%;
+            height:180px;
+            padding:10px;
+            margin-top:10px;
+            border-radius:5px;
+            border:1px solid #ccc;
         }
 
-        button {
-            background: #007BFF;
-            color: white;
-            border: none;
-            padding: 10px;
-            width: 100%;
-            cursor: pointer;
-            border-radius: 5px;
+        input[type="file"]{
+            margin-top:20px;
         }
 
-        button:hover {
-            background: #0056b3;
+        button{
+            width:100%;
+            padding:12px;
+            margin-top:25px;
+            background:#007BFF;
+            color:white;
+            border:none;
+            border-radius:5px;
+            font-size:16px;
+            cursor:pointer;
         }
+
+        button:hover{
+            background:#0056b3;
+        }
+
     </style>
+
 </head>
 
 <body>
 
 <div class="container">
-    <h2>AI Resume Screener</h2>
+
+    <h1>🤖 AI Resume Screening System</h1>
 
     <form method="POST" enctype="multipart/form-data">
-        <input type="file" name="resumes" multiple required>
 
-        <textarea name="job_desc" placeholder="Paste Job Description..." rows="6"></textarea>
+        <label><strong>Enter Job Description:</strong></label>
 
-        <button type="submit">Analyze Resume</button>
+        <textarea
+            name="job_description"
+            placeholder="Paste job description here..."
+            required
+        ></textarea>
+
+        <br>
+
+        <label><strong>Upload Resumes:</strong></label>
+
+        <input
+            type="file"
+            name="resume"
+            multiple
+            required
+        >
+
+        <button type="submit">
+            Analyze Resumes
+        </button>
+
     </form>
+
 </div>
 
 </body>
