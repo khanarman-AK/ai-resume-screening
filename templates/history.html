@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Recruiter History</title>
+
+    <style>
+
+        body{
+            font-family:Arial;
+            background:#f4f6f9;
+            padding:30px;
+        }
+
+        h2{
+            text-align:center;
+            margin-bottom:30px;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            background:white;
+            box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+        }
+
+        th, td{
+            padding:15px;
+            border:1px solid #ddd;
+            text-align:left;
+        }
+
+        th{
+            background:#007BFF;
+            color:white;
+        }
+
+        tr:nth-child(even){
+            background:#f9f9f9;
+        }
+
+        .back{
+            display:block;
+            margin-top:30px;
+            text-align:center;
+            text-decoration:none;
+            color:#007BFF;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <h2>📜 Recruiter Analysis History</h2>
+
+    <table>
+
+        <tr>
+            <th>Candidate</th>
+            <th>Score</th>
+            <th>Skills</th>
+            <th>Job Description</th>
+        </tr>
+
+        {% for row in data %}
+
+        <tr>
+
+            <td>{{ row[0] }}</td>
+
+            <td>{{ row[1] }}%</td>
+
+            <td>{{ row[2] }}</td>
+
+            <td>{{ row[3] }}</td>
+
+        </tr>
+
+        {% endfor %}
+
+    </table>
+
+    <a href="/" class="back">
+        ⬅ Back to Home
+    </a>
+
+</body>
+
+</html>

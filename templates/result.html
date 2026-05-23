@@ -180,6 +180,17 @@
                 <li>{{ skill }}</li>
                 {% endfor %}
             </ul>
+<p><strong>🤖 AI Suggestions:</strong></p>
+
+<ul>
+
+    {% for item in r.feedback %}
+
+    <li>{{ item }}</li>
+
+    {% endfor %}
+
+</ul>
 
         </div>
 
@@ -263,7 +274,7 @@
                 labels: {{ skill_labels | tojson }},
 
                 datasets: [{
-                    data: {{ skill_values | tojson }},
+                    data: {{ skill_counts | tojson }},
                     borderWidth: 1
                 }]
 
@@ -274,5 +285,27 @@
     </script>
 
 </body>
+<div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#007BFF;
+    color:white;
+    padding:15px 30px;
+">
+
+    <h3>
+        Welcome, {{ session.user }}
+    </h3>
+
+    <a href="/logout" style="
+        color:white;
+        text-decoration:none;
+        font-weight:bold;
+    ">
+        Logout
+    </a>
+
+</div>
 
 </html>
