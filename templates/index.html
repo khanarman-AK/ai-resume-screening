@@ -66,32 +66,24 @@
 
     <h1>🤖 AI Resume Screening System</h1>
 
-    <form method="POST" enctype="multipart/form-data">
+    <<form method="POST" enctype="multipart/form-data">
 
-        <label><strong>Enter Job Description:</strong></label>
+    <textarea
+        name="job_description"
+        placeholder="Enter Job Description"
+    ></textarea>
 
-        <textarea
-            name="job_description"
-            placeholder="Paste job description here..."
-            required
-        ></textarea>
+    <input
+        type="file"
+        name="resumes"
+        multiple
+    >
 
-        <br>
+    <button type="submit">
+        Analyze Resumes
+    </button>
 
-        <label><strong>Upload Resumes:</strong></label>
-
-        <input
-            type="file"
-            name="resume"
-            multiple
-            required
-        >
-
-        <button type="submit">
-            Analyze Resumes
-        </button>
-
-    </form>
+</form>
 
 </div>
 

@@ -1,4 +1,12 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    session,
+    send_file
+)
+
 import os
 import sqlite3
 
@@ -15,36 +23,49 @@ from utils.parser import (
 
 from utils.similarity import final_score
 
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer
+)
+
+from reportlab.lib.styles import (
+    getSampleStyleSheet
+)
+
 app = Flask(__name__)
 
 app.secret_key = "supersecretkey"
 
-# Upload Folder
+# =========================
+# DATABASE
+# =========================
 
-UPLOAD_FOLDER = "resumes"
+db_path = r"C:\Users\Public\database.db"
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
-# Database Path
-
-db_path = os.path.join(
-    os.environ["TEMP"],
-    "database.db"
+conn = sqlite3.connect(
+    db_path,
+    check_same_thread=False
 )
-
-# Create Database Table
-
-# Create Database Tables
-
-conn = sqlite3.connect(db_path)
 
 cursor = conn.cursor()
 
-# Resume Table
+# Users Table
 
 cursor.execute("""
+CREATE TABLE IF NOT EXISTS users (
 
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    username TEXT UNIQUE,
+
+    password TEXT
+)
+""")
+
+# Resumes Table
+
+cursor.execute("""
 CREATE TABLE IF NOT EXISTS resumes (
 
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,37 +74,128 @@ CREATE TABLE IF NOT EXISTS resumes (
 
     score REAL,
 
-    skills TEXT,
-
-    job_description TEXT
-
+    skills TEXT
 )
-
-""")
-
-# Users Table
-
-cursor.execute("""
-
-CREATE TABLE IF NOT EXISTS users (
-
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    username TEXT UNIQUE,
-
-    email TEXT UNIQUE,
-
-    password TEXT
-
-)
-
 """)
 
 conn.commit()
 
-conn.close()
 
-# Signup Route
+# =========================
+# QUESTION GENERATOR
+# =========================
+
+def generate_questions(skills):
+
+    questions = []
+
+    skill_questions = {
+
+        "python": [
+            "Explain Python decorators.",
+            "What is list comprehension in Python?",
+            "Difference between list and tuple?"
+        ],
+
+        "sql": [
+            "What is normalization?",
+            "Difference between WHERE and HAVING?",
+            "Explain SQL joins."
+        ],
+
+        "flask": [
+            "What is Flask?",
+            "Explain Flask routing.",
+            "What are templates in Flask?"
+        ],
+
+        "machine learning": [
+            "Difference between supervised and unsupervised learning?",
+            "What is overfitting?",
+            "Explain model training."
+        ],
+
+        "javascript": [
+            "Difference between var, let and const?",
+            "Explain closures in JavaScript.",
+            "What is DOM?"
+        ],
+
+        "react": [
+            "What are React components?",
+            "Explain useState hook.",
+            "What is virtual DOM?"
+        ],
+
+        "aws": [
+            "What is AWS EC2?",
+            "Explain cloud computing.",
+            "Difference between IaaS and PaaS?"
+        ]
+    }
+
+    for skill in skills:
+
+        skill_lower = skill.lower()
+
+        if skill_lower in skill_questions:
+
+            questions.extend(
+                skill_questions[skill_lower]
+            )
+
+    return questions[:10]
+
+
+# =========================
+# LOGIN
+# =========================
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+
+    if request.method == "POST":
+
+        username = request.form.get(
+            "username",
+            ""
+        )
+
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        if username == "" or password == "":
+
+            return "Username or Password Missing"
+
+        cursor.execute(
+            "SELECT * FROM users WHERE username = ?",
+            (username,)
+        )
+
+        user = cursor.fetchone()
+
+        if user:
+
+            if check_password_hash(
+                user[2],
+                password
+            ):
+
+                session["user"] = username
+
+                return redirect("/")
+
+        return "Invalid Credentials"
+
+    return render_template("login.html")
+
+
+# =========================
+# SIGNUP
+# =========================
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -92,84 +204,31 @@ def signup():
 
         username = request.form["username"]
 
-        email = request.form["email"]
-
         password = generate_password_hash(
             request.form["password"]
         )
 
-        conn = sqlite3.connect(db_path)
+        try:
 
-        cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO users (username, password) VALUES (?, ?)",
+                (username, password)
+            )
 
-        cursor.execute("""
+            conn.commit()
 
-        INSERT INTO users (
-            username,
-            email,
-            password
-        )
+            return redirect("/login")
 
-        VALUES (?, ?, ?)
+        except:
 
-        """, (
-
-            username,
-            email,
-            password
-
-        ))
-
-        conn.commit()
-
-        conn.close()
-
-        return redirect("/login")
+            return "Username already exists"
 
     return render_template("signup.html")
 
-#Login Route
 
-@app.route("/login", methods=["GET", "POST"])
-def login():
-
-    if request.method == "POST":
-
-        email = request.form["email"]
-
-        password = request.form["password"]
-
-        conn = sqlite3.connect(db_path)
-
-        cursor = conn.cursor()
-
-        cursor.execute("""
-
-        SELECT * FROM users
-        WHERE email = ?
-
-        """, (email,))
-
-        user = cursor.fetchone()
-
-        conn.close()
-
-        if user and check_password_hash(
-            user[3],
-            password
-        ):
-
-            session["user"] = user[1]
-
-            return redirect("/")
-
-        else:
-
-            return "Invalid Email or Password"
-
-    return render_template("login.html")
-
-# Logout Route
+# =========================
+# LOGOUT
+# =========================
 
 @app.route("/logout")
 def logout():
@@ -179,7 +238,9 @@ def logout():
     return redirect("/login")
 
 
-# Home Route
+# =========================
+# HOME
+# =========================
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -192,210 +253,220 @@ def index():
 
         job_desc = request.form["job_description"]
 
-        files = request.files.getlist("resume")
+        files = request.files.getlist("resumes")
 
         results = []
 
         for file in files:
 
-            if file.filename.endswith(".pdf"):
+            if file.filename == "":
 
-                # Save File
+                continue
 
-                file_path = os.path.join(
-                    UPLOAD_FOLDER,
-                    file.filename
-                )
+            filename = file.filename
 
-                file.save(file_path)
+            upload_folder = "resumes"
 
-                # Extract Text
+            os.makedirs(upload_folder, exist_ok=True)
 
-                text = extract_text_from_pdf(file_path)
+            file_path = os.path.join(
+                upload_folder,
+                filename
+            )
 
-                cleaned = clean_text(text)
+            file.save(file_path)
 
-                # Skills
+            text = extract_text_from_pdf(
+                file_path
+            )
 
-                resume_skills = extract_skills_nlp(cleaned)
+            cleaned = clean_text(text)
 
-                jd_skills = extract_skills_nlp(
-                    job_desc.lower()
-                )
+            # =========================
+            # SKILLS
+            # =========================
 
-                # Score
+            resume_skills = extract_skills_nlp(
+                cleaned
+            )
 
-                score, matched = final_score(
-                    cleaned,
-                    job_desc,
-                    resume_skills,
-                    jd_skills
-                )
+            jd_skills = extract_skills_nlp(
+                job_desc.lower()
+            )
 
-                # AI Feedback
+            questions = generate_questions(
+                resume_skills
+            )
 
-                feedback = []
+            score, matched = final_score(
+                cleaned,
+                job_desc,
+                resume_skills,
+                jd_skills
+            )
 
-                if score >= 80:
+            # =========================
+            # FEEDBACK
+            # =========================
 
-                    feedback.append(
-                        "Excellent match for this role"
-                    )
+            feedback = []
 
-                elif score >= 60:
-
-                    feedback.append(
-                        "Good profile but can improve further"
-                    )
-
-                else:
-
-                    feedback.append(
-                        "Resume needs improvement"
-                    )
-
-                important_skills = [
-
-                    "python",
-                    "sql",
-                    "communication",
-                    "leadership",
-                    "excel"
-
-                ]
-
-                for skill in important_skills:
-
-                    if skill not in resume_skills:
-
-                        feedback.append(
-                            f"Consider adding {skill} skills"
-                        )
-
-                if len(resume_skills) < 5:
-
-                    feedback.append(
-                        "Add more technical skills"
-                    )
+            if score >= 80:
 
                 feedback.append(
-                    "Add projects and internship experience"
+                    "Excellent match for the role."
                 )
 
-                # Save Database
+            elif score >= 50:
 
-                conn = sqlite3.connect(db_path)
-
-                cursor = conn.cursor()
-
-                cursor.execute("""
-
-                INSERT INTO resumes (
-
-                    candidate_name,
-                    score,
-                    skills,
-                    job_description
-
+                feedback.append(
+                    "Good profile but can improve."
                 )
-
-                VALUES (?, ?, ?, ?)
-
-                """, (
-
-                    file.filename,
-                    score,
-                    ", ".join(matched),
-                    job_desc
-
-                ))
-
-                conn.commit()
-
-                conn.close()
-
-                # Store Result
-
-                results.append({
-
-                    "name": file.filename,
-
-                    "score": score,
-
-                    "skills": matched,
-
-                    "feedback": feedback
-
-                })
-
-        # Sort Results
-
-        results = sorted(
-            results,
-            key=lambda x: x["score"],
-            reverse=True
-        )
-
-        # Dashboard
-
-        total_resumes = len(results)
-
-        average_score = round(
-
-            sum(r["score"] for r in results)
-            / total_resumes,
-
-            2
-
-        ) if total_resumes > 0 else 0
-
-        top_candidate = (
-
-            results[0]["name"]
-
-            if total_resumes > 0
-
-            else "None"
-
-        )
-
-        total_skills = sum(
-            len(r["skills"]) for r in results
-        )
-
-        # Resume Score Chart
-
-        chart_labels = [
-            r["name"] for r in results
-        ]
-
-        chart_scores = [
-            r["score"] for r in results
-        ]
-
-        # Skill Frequency Chart
-
-        all_skills = []
-
-        for r in results:
-
-            all_skills.extend(r["skills"])
-
-        skill_dict = {}
-
-        for skill in all_skills:
-
-            if skill in skill_dict:
-
-                skill_dict[skill] += 1
 
             else:
 
-                skill_dict[skill] = 1
+                feedback.append(
+                    "Needs more relevant skills."
+                )
 
-        skill_labels = list(skill_dict.keys())
+            important_skills = [
+                "python",
+                "sql",
+                "machine learning",
+                "flask",
+                "react",
+                "aws"
+            ]
 
-        skill_counts = list(skill_dict.values())
+            for skill in important_skills:
+
+                if skill not in resume_skills:
+
+                    feedback.append(
+                        f"Consider adding {skill} skills."
+                    )
+
+            # =========================
+            # SAVE DATABASE
+            # =========================
+
+            cursor.execute("""
+
+            INSERT INTO resumes (
+                candidate_name,
+                score,
+                skills
+            )
+
+            VALUES (?, ?, ?)
+
+            """, (
+
+                filename,
+                score,
+                ", ".join(matched)
+
+            ))
+
+            conn.commit()
+
+            # =========================
+            # RESULTS
+            # =========================
+
+            results.append({
+
+                "name": filename,
+
+                "score": round(score, 2),
+
+                "skills": matched,
+
+                "suggestions": feedback,
+
+                "questions": questions
+
+            })
+
+        # =========================
+        # SORT RESULTS
+        # =========================
+
+        results = sorted(
+
+            results,
+
+            key=lambda x: x["score"],
+
+            reverse=True
+        )
+
+        # =========================
+        # DASHBOARD
+        # =========================
+
+        total_resumes = len(results)
+
+        average_score = 0
+
+        if total_resumes > 0:
+
+            average_score = round(
+
+                sum(
+                    r["score"]
+                    for r in results
+                ) / total_resumes,
+
+                2
+            )
+
+        top_candidate = "N/A"
+
+        if results:
+
+            top_candidate = results[0]["name"]
+
+        total_skills = sum(
+            len(r["skills"])
+            for r in results
+        )
+
+        # =========================
+        # CHARTS
+        # =========================
+
+        chart_labels = [
+            r["name"]
+            for r in results
+        ]
+
+        chart_scores = [
+            r["score"]
+            for r in results
+        ]
+
+        skill_counts = {}
+
+        for r in results:
+
+            for skill in r["skills"]:
+
+                if skill in skill_counts:
+
+                    skill_counts[skill] += 1
+
+                else:
+
+                    skill_counts[skill] = 1
+
+        skill_labels = list(
+            skill_counts.keys()
+        )
+
+        skill_values = list(
+            skill_counts.values()
+        )
 
         return render_template(
 
@@ -417,14 +488,15 @@ def index():
 
             skill_labels=skill_labels,
 
-            skill_counts=skill_counts
-
+            skill_values=skill_values
         )
 
     return render_template("index.html")
 
 
-# History Route
+# =========================
+# HISTORY
+# =========================
 
 @app.route("/history")
 def history():
@@ -439,33 +511,137 @@ def history():
 
     cursor.execute("""
 
-    SELECT
-        candidate_name,
-        score,
-        skills,
-        job_description
-
+    SELECT candidate_name, score, skills
     FROM resumes
-
-    ORDER BY id DESC
+    ORDER BY score DESC
 
     """)
 
-    data = cursor.fetchall()
+    history_data = cursor.fetchall()
 
     conn.close()
 
     return render_template(
         "history.html",
-        data=data
+        history=history_data
     )
 
 
-# Run App
+# =========================
+# PDF REPORT
+# =========================
+
+@app.route("/download-report/<candidate_name>")
+def download_report(candidate_name):
+
+    if "user" not in session:
+
+        return redirect("/login")
+
+    conn = sqlite3.connect(db_path)
+
+    cursor = conn.cursor()
+
+    cursor.execute("""
+
+    SELECT candidate_name, score, skills
+    FROM resumes
+    WHERE candidate_name = ?
+
+    """, (candidate_name,))
+
+    data = cursor.fetchone()
+
+    conn.close()
+
+    if not data:
+
+        return "Candidate Not Found"
+
+    file_name = f"{candidate_name}_report.pdf"
+
+    doc = SimpleDocTemplate(
+        file_name
+    )
+
+    styles = getSampleStyleSheet()
+
+    elements = []
+
+    title = Paragraph(
+
+        "<b>ATS Resume Report</b>",
+
+        styles['Title']
+    )
+
+    elements.append(title)
+
+    elements.append(
+        Spacer(1, 20)
+    )
+
+    elements.append(
+
+        Paragraph(
+
+            f"<b>Candidate:</b> {data[0]}",
+
+            styles['BodyText']
+        )
+    )
+
+    elements.append(
+
+        Paragraph(
+
+            f"<b>ATS Score:</b> {data[1]}%",
+
+            styles['BodyText']
+        )
+    )
+
+    elements.append(
+
+        Paragraph(
+
+            f"<b>Matched Skills:</b> {data[2]}",
+
+            styles['BodyText']
+        )
+    )
+
+    elements.append(
+        Spacer(1, 20)
+    )
+
+    elements.append(
+
+        Paragraph(
+
+            "Generated by AI ATS Screening System",
+
+            styles['Italic']
+        )
+    )
+
+    doc.build(elements)
+
+    return send_file(
+        file_name,
+        as_attachment=True
+    )
+
+
+# =========================
+# RUN
+# =========================
 
 if __name__ == "__main__":
 
-    port = int(os.environ.get("PORT", 5000))
+    port = int(
+        os.environ.get("PORT", 5000)
+    )
 
     app.run(
         host="0.0.0.0",

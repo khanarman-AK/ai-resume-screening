@@ -180,6 +180,38 @@
                 <li>{{ skill }}</li>
                 {% endfor %}
             </ul>
+
+<p><strong>AI Interview Questions:</strong></p>
+
+<ul>
+    {% for q in r.questions %}
+        <li>{{ q }}</li>
+    {% endfor %}
+</ul>
+
+<p><strong>Matched Skills:</strong></p>
+
+<ul>
+    {% for skill in r.skills %}
+        <li>{{ skill }}</li>
+    {% endfor %}
+</ul>
+
+<a href="/download-report/{{ r.name }}"
+   style="
+   display:inline-block;
+   margin-top:10px;
+   background:#007BFF;
+   color:white;
+   padding:10px 15px;
+   border-radius:6px;
+   text-decoration:none;
+   ">
+
+   📄 Download PDF Report
+
+</a>
+
 <p><strong>🤖 AI Suggestions:</strong></p>
 
 <ul>
@@ -274,7 +306,7 @@
                 labels: {{ skill_labels | tojson }},
 
                 datasets: [{
-                    data: {{ skill_counts | tojson }},
+                    data: {{ skill_values | tojson }},
                     borderWidth: 1
                 }]
 
