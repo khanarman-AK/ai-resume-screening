@@ -36,6 +36,8 @@ from reportlab.lib.styles import (
 app = Flask(__name__)
 
 app.secret_key = "supersecretkey"
+app.config["SESSION_COOKIE_SAMESITE"] = "None"
+app.config["SESSION_COOKIE_SECURE"] = True
 
 # =========================
 # DATABASE
