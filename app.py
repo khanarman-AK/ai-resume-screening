@@ -41,7 +41,9 @@ app.secret_key = "supersecretkey"
 # DATABASE
 # =========================
 
-db_path = r"C:\Users\Public\database.db"
+db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "database.db")
+
+os.makedirs(os.path.dirname(db_path), exist_ok=True)
 
 conn = sqlite3.connect(
     db_path,
