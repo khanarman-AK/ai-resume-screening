@@ -10,6 +10,8 @@ from flask import (
 import os
 import sqlite3
 
+from flask_session import Session
+
 from werkzeug.security import (
     generate_password_hash,
     check_password_hash
@@ -36,8 +38,10 @@ from reportlab.lib.styles import (
 app = Flask(__name__)
 
 app.secret_key = "supersecretkey"
-app.config["SESSION_COOKIE_SAMESITE"] = "None"
-app.config["SESSION_COOKIE_SECURE"] = True
+app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_FILE_DIR"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), "flask_sessions")
+app.config["SESSION_PERMANENT"] = False
+Session(app)
 
 # =========================
 # DATABASE
