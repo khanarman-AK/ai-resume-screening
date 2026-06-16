@@ -85,6 +85,53 @@ CERTIFICATIONS = [
     ("Lean Six Sigma",              [r"lean six sigma"]),
     ("ISO Certified",               [r"iso certif"]),
     ("ITIL Certified",              [r"\bitil\b"]),
+
+    # ── Coursera Certificates ─────────────────────────────────────────────────
+    # General Coursera mention
+    ("Coursera Certificate",        [r"coursera"]),
+
+    # Google Professional Certificates (via Coursera)
+    ("Google IT Support (Coursera)",         [r"google it support"]),
+    ("Google Data Analytics (Coursera)",     [r"google data analytics"]),
+    ("Google Project Management (Coursera)", [r"google project management"]),
+    ("Google Cybersecurity (Coursera)",      [r"google cybersecurity"]),
+    ("Google UX Design (Coursera)",          [r"google ux design"]),
+    ("Google Business Intelligence (Coursera)",[r"google business intelligence"]),
+    ("Google Digital Marketing (Coursera)",  [r"google digital marketing"]),
+    ("Google Advanced Data Analytics (Coursera)",[r"google advanced data analytics"]),
+
+    # IBM Professional Certificates (via Coursera)
+    ("IBM Data Science (Coursera)",          [r"ibm data science"]),
+    ("IBM AI Engineering (Coursera)",        [r"ibm ai engineering"]),
+    ("IBM Full Stack Development (Coursera)",[r"ibm full stack"]),
+    ("IBM Cybersecurity Analyst (Coursera)", [r"ibm cybersecurity analyst"]),
+    ("IBM Data Analyst (Coursera)",          [r"ibm data analyst"]),
+    ("IBM Machine Learning (Coursera)",      [r"ibm machine learning"]),
+    ("IBM Applied AI (Coursera)",            [r"ibm applied ai"]),
+
+    # Meta Professional Certificates (via Coursera)
+    ("Meta Frontend Developer (Coursera)",   [r"meta (front.?end|frontend) developer"]),
+    ("Meta Backend Developer (Coursera)",    [r"meta (back.?end|backend) developer"]),
+    ("Meta Marketing Analytics (Coursera)",  [r"meta marketing analytics"]),
+    ("Meta Social Media Marketing (Coursera)",[r"meta social media marketing"]),
+
+    # DeepLearning.AI (via Coursera)
+    ("DeepLearning.AI — Machine Learning Specialization", [r"machine learning specialization"]),
+    ("DeepLearning.AI — Deep Learning",      [r"deep learning specialization"]),
+    ("DeepLearning.AI — NLP Specialization", [r"nlp specialization"]),
+    ("DeepLearning.AI — MLOps",              [r"mlops specialization"]),
+    ("DeepLearning.AI — Generative AI",      [r"generative ai with llm", r"deeplearning.?ai"]),
+
+    # Microsoft (via Coursera)
+    ("Microsoft Azure (Coursera)",           [r"microsoft azure.*coursera|coursera.*microsoft azure"]),
+    ("Microsoft Power BI (Coursera)",        [r"microsoft power bi.*coursera|coursera.*power bi"]),
+
+    # University Specializations (via Coursera)
+    ("Wharton Business Foundation (Coursera)",[r"wharton"]),
+    ("Duke Data Science (Coursera)",         [r"duke.*data science|data science.*duke"]),
+    ("Stanford Machine Learning (Coursera)", [r"stanford.*machine learning|andrew ng"]),
+    ("Johns Hopkins Data Science (Coursera)",[r"johns hopkins.*data"]),
+    ("University of Michigan (Coursera)",    [r"university of michigan.*coursera"]),
 ]
 
 
@@ -125,7 +172,9 @@ ROLE_CERT_RELEVANCE = {
 def extract_certifications(raw_text: str) -> list[str]:
     """
     Scan raw (uncleaned) resume text for recognised certifications.
-    Returns a list of display names found.
+    Returns a deduplicated list of display names, most specific first.
+    If a specific Coursera cert is found, the generic 'Coursera Certificate'
+    entry is suppressed to avoid redundancy.
     """
     text_lower = raw_text.lower()
     found = []
@@ -135,6 +184,11 @@ def extract_certifications(raw_text: str) -> list[str]:
             if re.search(pattern, text_lower):
                 found.append(display_name)
                 break  # each cert counted once
+
+    # Suppress generic "Coursera Certificate" when a specific Coursera cert exists
+    specific_coursera = [c for c in found if "(Coursera)" in c]
+    if specific_coursera and "Coursera Certificate" in found:
+        found = [c for c in found if c != "Coursera Certificate"]
 
     return found
 
