@@ -24,7 +24,7 @@ from utils.parser import (
 )
 
 from utils.similarity import final_score
-from utils.role_skills import detect_role_skills
+from utils.role_skills import detect_role_skills, get_role_questions
 
 from reportlab.platypus import (
     SimpleDocTemplate,
@@ -99,54 +99,66 @@ conn.commit()
 # QUESTION GENERATOR
 # =========================
 
-def generate_questions(skills):
+def generate_questions(resume_skills, detected_role=None):
+    """
+    Return interview questions tailored to the detected role.
+    Falls back to skill-based questions if role is unknown.
+    """
+    # 1. Role-specific questions (primary source)
+    role_qs = get_role_questions(detected_role)
+    if role_qs:
+        return role_qs[:6]
 
-    questions = []
-
+    # 2. Fallback: skill-based questions when no role detected
     skill_questions = {
         "python": [
-            "Explain Python decorators.",
-            "What is list comprehension in Python?",
-            "Difference between list and tuple?"
+            "Explain Python decorators and give a real-world use case.",
+            "What is the difference between a list and a tuple in Python?",
+            "How does Python handle memory management?",
         ],
         "sql": [
-            "What is normalization?",
-            "Difference between WHERE and HAVING?",
-            "Explain SQL joins."
-        ],
-        "flask": [
-            "What is Flask?",
-            "Explain Flask routing.",
-            "What are templates in Flask?"
+            "Explain the difference between INNER JOIN and LEFT JOIN.",
+            "What is database normalization and why does it matter?",
+            "How do you optimize a slow SQL query?",
         ],
         "machine learning": [
-            "Difference between supervised and unsupervised learning?",
-            "What is overfitting?",
-            "Explain model training."
+            "Explain the bias-variance tradeoff.",
+            "How do you handle an imbalanced dataset?",
+            "What is the difference between classification and regression?",
         ],
         "javascript": [
-            "Difference between var, let and const?",
-            "Explain closures in JavaScript.",
-            "What is DOM?"
+            "Explain closures in JavaScript with an example.",
+            "What is the difference between == and === ?",
+            "How does the JavaScript event loop work?",
         ],
         "react": [
-            "What are React components?",
-            "Explain useState hook.",
-            "What is virtual DOM?"
+            "What is the virtual DOM and how does React use it?",
+            "Explain the difference between useState and useEffect.",
+            "How do you manage global state in a React app?",
         ],
         "aws": [
-            "What is AWS EC2?",
-            "Explain cloud computing.",
-            "Difference between IaaS and PaaS?"
-        ]
+            "What is the difference between EC2 and Lambda?",
+            "How do you secure an S3 bucket?",
+            "Explain VPC and its components.",
+        ],
+        "communication": [
+            "Describe a situation where you had to persuade a stakeholder.",
+            "How do you adapt your communication style for different audiences?",
+        ],
+        "leadership": [
+            "Describe a time you led a team through a difficult challenge.",
+            "How do you motivate team members who are underperforming?",
+        ],
     }
 
-    for skill in skills:
-        skill_lower = skill.lower()
-        if skill_lower in skill_questions:
-            questions.extend(skill_questions[skill_lower])
+    questions = []
+    for skill in resume_skills:
+        if skill.lower() in skill_questions:
+            questions.extend(skill_questions[skill.lower()])
+        if len(questions) >= 6:
+            break
 
-    return questions[:10]
+    return questions[:6]
 
 
 # =========================
@@ -262,29 +274,64 @@ def index():
             # Merge auto-injected role skills with explicitly extracted ones
             jd_skills = list(set(jd_skills) | set(role_skills))
 
-            questions = generate_questions(resume_skills)
+            questions = generate_questions(resume_skills, detected_role)
 
             score, matched = final_score(
                 cleaned, job_desc, resume_skills, jd_skills
             )
 
+            n_matched = len(matched)
+            role_label = detected_role or "this position"
+            missing = [s for s in jd_skills if s not in matched]
+
             feedback = []
 
-            if score >= 88:
-                feedback.append("Excellent match for the role.")
+            # Overall verdict — role-aware
+            if score >= 90:
+                feedback.append(
+                    f"Outstanding fit for {role_label}. "
+                    f"Strong across all key competencies — highly recommend for interview."
+                )
+            elif score >= 83:
+                feedback.append(
+                    f"Strong candidate for {role_label} with {n_matched} matched skills. "
+                    f"Can ramp up remaining areas quickly with on-the-job training."
+                )
             elif score >= 74:
-                feedback.append("Good profile but can improve.")
+                feedback.append(
+                    f"Good profile for {role_label}. "
+                    f"Has the core foundation — trainable on the gaps within 1–3 months."
+                )
             else:
-                feedback.append("Needs more relevant skills.")
+                feedback.append(
+                    f"Partial match for {role_label}. "
+                    f"Consider for a junior/trainee level or upskilling programme."
+                )
 
-            important_skills = [
-                "python", "sql", "machine learning",
-                "flask", "react", "aws"
-            ]
+            # Skill gap advice — specific to the role's missing skills
+            if missing:
+                top_missing = missing[:3]
+                skills_str = ", ".join(top_missing)
+                feedback.append(
+                    f"Priority skills to develop for {role_label}: {skills_str}. "
+                    f"These can typically be acquired through targeted training or a short project."
+                )
 
-            for skill in important_skills:
-                if skill not in resume_skills:
-                    feedback.append(f"Consider adding {skill} skills.")
+            # Strength callout
+            if n_matched >= 5:
+                strengths = ", ".join(matched[:4])
+                feedback.append(
+                    f"Key strengths aligned with {role_label}: {strengths}. "
+                    f"These are the competencies hiring managers value most."
+                )
+
+            # Trainability note for partial matches
+            if 3 <= n_matched < 7 and missing:
+                feedback.append(
+                    f"Candidates with {n_matched} matched skills for {role_label} "
+                    f"are often highly trainable. Evaluate problem-solving ability and learning agility "
+                    f"in the interview rather than penalising for skill gaps."
+                )
 
             cursor.execute("""
                 INSERT INTO resumes (candidate_name, score, skills)

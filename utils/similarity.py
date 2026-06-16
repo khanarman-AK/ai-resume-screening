@@ -1,3 +1,4 @@
+import math
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -14,7 +15,7 @@ def calculate_similarity(resume_text, job_desc):
 
 def rescale(raw):
     """Rescale a 0–100 raw score to the MIN_SCORE–100 range."""
-    return round(MIN_SCORE + (raw / 100) * (MAX_SCORE - MIN_SCORE), 2)
+    return MIN_SCORE + (raw / 100) * (MAX_SCORE - MIN_SCORE)
 
 
 def final_score(resume_text, job_desc, resume_skills, jd_skills):
@@ -23,16 +24,31 @@ def final_score(resume_text, job_desc, resume_skills, jd_skills):
 
     matched_skills = set(resume_skills) & set(jd_skills)
     n_matched = len(matched_skills)
+    total = len(jd_skills)
 
-    skill_score = (n_matched / len(jd_skills)) * 100 if jd_skills else 0
+    # ── Smart skill score using sqrt scaling ──────────────────────────────────
+    # sqrt(ratio) rewards partial matches fairly:
+    #   3/15 (20%) → sqrt(0.20) = 44.7%   (not penalised harshly)
+    #   5/15 (33%) → sqrt(0.33) = 57.7%   (solid match)
+    #   7/15 (47%) → sqrt(0.47) = 68.6%   (strong candidate)
+    #  10/15 (67%) → sqrt(0.67) = 81.9%   (very strong)
+    #  15/15 (100%)→ sqrt(1.00) = 100%    (perfect)
+    if total > 0:
+        ratio = n_matched / total
+        skill_score = math.sqrt(ratio) * 100
+    else:
+        skill_score = 0
 
-    raw = (0.5 * similarity_score) + (0.5 * skill_score)
-
+    # Skills count 65%, text similarity 35%
+    raw = (0.35 * similarity_score) + (0.65 * skill_score)
     scaled = rescale(raw)
 
-    # Each matched skill guarantees a rising floor:
-    # 0 skills→62, 1→65, 2→68, 3→71, 4→74, 5→77, 6→80, 7→83, 8+→85 (capped)
-    skill_floor = min(MIN_SCORE + n_matched * 3, 85)
+    # ── Matched-skill floor ───────────────────────────────────────────────────
+    # Think like a recruiter: a candidate with 5+ core skills can be trained
+    # on the rest. Give them a fair baseline.
+    #  0 → 62 | 1 → 65 | 2 → 68 | 3 → 72 | 4 → 75
+    #  5 → 79 | 6 → 83 | 7 → 86 | 8+ capped at 88
+    skill_floor = min(62 + n_matched * 3.5, 88)
     scaled = max(scaled, skill_floor)
 
     return round(min(scaled, 100), 2), list(matched_skills)
