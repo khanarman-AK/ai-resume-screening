@@ -1,129 +1,131 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <title>RecruitIQ — History</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+        :root {
+            --bg:          #f1f5f9;
+            --card:        #ffffff;
+            --nav:         #0f172a;
+            --text:        #0f172a;
+            --text-sub:    #64748b;
+            --text-muted:  #94a3b8;
+            --label:       #374151;
+            --border:      #e2e8f0;
+            --th-bg:       #f8fafc;
+            --th-border:   #e2e8f0;
+            --td-border:   #f1f5f9;
+            --td-hover:    #f8fafc;
+            --shadow:      rgba(0,0,0,0.07);
+        }
+
+        [data-theme="dark"] {
+            --bg:          #0f172a;
+            --card:        #1e293b;
+            --nav:         #020617;
+            --text:        #f1f5f9;
+            --text-sub:    #94a3b8;
+            --text-muted:  #64748b;
+            --label:       #cbd5e1;
+            --border:      rgba(255,255,255,0.08);
+            --th-bg:       #0f172a;
+            --th-border:   rgba(255,255,255,0.1);
+            --td-border:   rgba(255,255,255,0.05);
+            --td-hover:    rgba(255,255,255,0.03);
+            --shadow:      rgba(0,0,0,0.35);
+        }
+
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
-            background: #f1f5f9;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
+            transition: background 0.25s, color 0.25s;
         }
 
         nav {
-            background: #0f172a;
-            padding: 0 32px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            background: var(--nav);
+            padding: 0 32px; height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 1px 0 rgba(255,255,255,0.05);
         }
 
-        .nav-logo {
-            font-size: 18px;
-            font-weight: 700;
-            color: #fff;
-        }
-
+        .nav-logo { font-size: 18px; font-weight: 700; color: #fff; }
         .nav-logo span { color: #818cf8; }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-
-        .nav-links a {
-            color: #94a3b8;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-
+        .nav-links { display: flex; align-items: center; gap: 20px; }
+        .nav-links a { color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
         .nav-links a:hover { color: #fff; }
-
         .nav-user { font-size: 13px; color: #64748b; }
 
-        .main {
-            max-width: 900px;
-            margin: 48px auto;
-            padding: 0 24px;
+        .theme-toggle {
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 16px;
+            transition: background 0.2s; flex-shrink: 0;
         }
+        .theme-toggle:hover { background: rgba(255,255,255,0.14); }
 
-        .page-title {
-            font-size: 26px;
-            font-weight: 800;
-            color: #0f172a;
-            margin-bottom: 24px;
-        }
+        .main { max-width: 900px; margin: 48px auto; padding: 0 24px; }
+
+        .page-title { font-size: 26px; font-weight: 800; color: var(--text); margin-bottom: 24px; }
 
         .card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05);
+            background: var(--card);
+            border-radius: 16px; padding: 32px;
+            box-shadow: 0 1px 3px var(--shadow), 0 4px 16px var(--shadow);
+            border: 1px solid var(--border);
             overflow-x: auto;
+            transition: background 0.25s;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        table { width: 100%; border-collapse: collapse; }
 
-        th, td {
-            padding: 13px 16px;
-            text-align: left;
-            font-size: 14px;
-        }
+        th, td { padding: 13px 16px; text-align: left; font-size: 14px; }
 
         th {
-            background: #f8fafc;
-            color: #374151;
+            background: var(--th-bg);
+            color: var(--label);
             font-weight: 600;
-            border-bottom: 2px solid #e2e8f0;
+            border-bottom: 2px solid var(--th-border);
+            transition: background 0.25s;
         }
 
         td {
-            border-bottom: 1px solid #f1f5f9;
-            color: #374151;
+            border-bottom: 1px solid var(--td-border);
+            color: var(--label);
+            transition: background 0.2s;
         }
 
         tr:last-child td { border-bottom: none; }
-
-        tr:hover td { background: #f8fafc; }
+        tr:hover td { background: var(--td-hover); }
 
         .score {
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 13px;
+            font-weight: 700; padding: 3px 10px;
+            border-radius: 20px; font-size: 13px;
         }
 
         .score-high { background: #dcfce7; color: #16a34a; }
         .score-mid  { background: #fef9c3; color: #ca8a04; }
         .score-low  { background: #fee2e2; color: #dc2626; }
 
-        .empty {
-            text-align: center;
-            color: #94a3b8;
-            padding: 48px;
-            font-size: 15px;
-        }
+        [data-theme="dark"] .score-high { background: rgba(34,197,94,0.15);  color: #4ade80; }
+        [data-theme="dark"] .score-mid  { background: rgba(234,179,8,0.15);   color: #facc15; }
+        [data-theme="dark"] .score-low  { background: rgba(239,68,68,0.15);   color: #f87171; }
+
+        .empty { text-align: center; color: var(--text-muted); padding: 48px; font-size: 15px; }
 
         .back {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 24px;
-            color: #6366f1;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-top: 24px; color: #6366f1;
+            text-decoration: none; font-weight: 600; font-size: 14px;
         }
-
         .back:hover { text-decoration: underline; }
     </style>
 </head>
@@ -135,6 +137,7 @@
         <span class="nav-user">👤 {{ username }}</span>
         <a href="/?t={{ t }}">Dashboard</a>
         <a href="/logout">Logout</a>
+        <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">🌙</button>
     </div>
 </nav>
 
@@ -159,8 +162,8 @@
                     <td><strong>{{ row[0] }}</strong></td>
                     <td>
                         <span class="score
-                            {% if row[1] >= 70 %}score-high
-                            {% elif row[1] >= 40 %}score-mid
+                            {% if row[1] >= 83 %}score-high
+                            {% elif row[1] >= 74 %}score-mid
                             {% else %}score-low{% endif %}">
                             {{ row[1] }}%
                         </span>
@@ -180,5 +183,21 @@
     <a href="/?t={{ t }}" class="back">← Back to Dashboard</a>
 </div>
 
+<script>
+    const html   = document.documentElement;
+    const btn    = document.getElementById('themeToggle');
+    const stored = localStorage.getItem('riq-theme') || 'light';
+
+    function applyTheme(t) {
+        html.setAttribute('data-theme', t);
+        btn.textContent = t === 'dark' ? '☀️' : '🌙';
+        localStorage.setItem('riq-theme', t);
+    }
+
+    applyTheme(stored);
+    btn.addEventListener('click', () => {
+        applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    });
+</script>
 </body>
 </html>
