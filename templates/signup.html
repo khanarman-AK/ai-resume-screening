@@ -318,6 +318,12 @@
             <p>Start screening smarter today — it's free</p>
         </div>
 
+        {% if error %}
+        <div style="background:#fee2e2;color:#dc2626;padding:12px 16px;border-radius:10px;font-size:14px;margin-bottom:20px;border:1px solid #fca5a5;">
+            {{ error }}
+        </div>
+        {% endif %}
+
         <form method="POST">
             <div class="form-group">
                 <label for="username">Username</label>

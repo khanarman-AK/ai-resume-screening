@@ -1,92 +1,184 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
-    <title>Recruiter History</title>
-
+    <meta charset="UTF-8">
+    <title>RecruitIQ — History</title>
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body{
-            font-family:Arial;
-            background:#f4f6f9;
-            padding:30px;
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #f1f5f9;
+            min-height: 100vh;
         }
 
-        h2{
-            text-align:center;
-            margin-bottom:30px;
+        nav {
+            background: #0f172a;
+            padding: 0 32px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        table{
-            width:100%;
-            border-collapse:collapse;
-            background:white;
-            box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+        .nav-logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
         }
 
-        th, td{
-            padding:15px;
-            border:1px solid #ddd;
-            text-align:left;
+        .nav-logo span { color: #818cf8; }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
         }
 
-        th{
-            background:#007BFF;
-            color:white;
+        .nav-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
         }
 
-        tr:nth-child(even){
-            background:#f9f9f9;
+        .nav-links a:hover { color: #fff; }
+
+        .nav-user { font-size: 13px; color: #64748b; }
+
+        .main {
+            max-width: 900px;
+            margin: 48px auto;
+            padding: 0 24px;
         }
 
-        .back{
-            display:block;
-            margin-top:30px;
-            text-align:center;
-            text-decoration:none;
-            color:#007BFF;
+        .page-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 24px;
         }
 
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 13px 16px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #374151;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            border-bottom: 1px solid #f1f5f9;
+            color: #374151;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        tr:hover td { background: #f8fafc; }
+
+        .score {
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .score-high { background: #dcfce7; color: #16a34a; }
+        .score-mid  { background: #fef9c3; color: #ca8a04; }
+        .score-low  { background: #fee2e2; color: #dc2626; }
+
+        .empty {
+            text-align: center;
+            color: #94a3b8;
+            padding: 48px;
+            font-size: 15px;
+        }
+
+        .back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 24px;
+            color: #6366f1;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .back:hover { text-decoration: underline; }
     </style>
-
 </head>
-
 <body>
 
-    <h2>📜 Recruiter Analysis History</h2>
+<nav>
+    <div class="nav-logo">Recruit<span>IQ</span></div>
+    <div class="nav-links">
+        <span class="nav-user">👤 {{ username }}</span>
+        <a href="/?t={{ t }}">Dashboard</a>
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
 
-    <table>
+<div class="main">
+    <h1 class="page-title">Screening History</h1>
 
-        <tr>
-            <th>Candidate</th>
-            <th>Score</th>
-            <th>Skills</th>
-            <th>Job Description</th>
-        </tr>
+    <div class="card">
+        {% if history %}
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Candidate</th>
+                    <th>ATS Score</th>
+                    <th>Matched Skills</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in history %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><strong>{{ row[0] }}</strong></td>
+                    <td>
+                        <span class="score
+                            {% if row[1] >= 70 %}score-high
+                            {% elif row[1] >= 40 %}score-mid
+                            {% else %}score-low{% endif %}">
+                            {{ row[1] }}%
+                        </span>
+                    </td>
+                    <td>{{ row[2] or '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty">
+            No screening history yet. Upload resumes on the dashboard to get started.
+        </div>
+        {% endif %}
+    </div>
 
-        {% for row in data %}
-
-        <tr>
-
-            <td>{{ row[0] }}</td>
-
-            <td>{{ row[1] }}%</td>
-
-            <td>{{ row[2] }}</td>
-
-            <td>{{ row[3] }}</td>
-
-        </tr>
-
-        {% endfor %}
-
-    </table>
-
-    <a href="/" class="back">
-        ⬅ Back to Home
-    </a>
+    <a href="/?t={{ t }}" class="back">← Back to Dashboard</a>
+</div>
 
 </body>
-
 </html>
