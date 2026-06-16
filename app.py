@@ -293,10 +293,18 @@ def index():
 
             conn.commit()
 
+            # Skills to display: all resume skills, annotated as matched or not
+            # Fall back to resume_skills if no JD skills were detected
+            display_matched = matched if matched else resume_skills
+            missing_skills = [s for s in jd_skills if s not in matched][:8]
+
             results.append({
                 "name": filename,
                 "score": round(score, 2),
-                "skills": matched,
+                "skills": display_matched,
+                "missing_skills": missing_skills,
+                "resume_skills": resume_skills,
+                "matched_set": matched,
                 "suggestions": feedback,
                 "questions": questions
             })
