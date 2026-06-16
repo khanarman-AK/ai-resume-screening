@@ -398,6 +398,8 @@ def download_report(candidate_name):
         SELECT candidate_name, score, skills
         FROM resumes
         WHERE candidate_name = ?
+        ORDER BY id DESC
+        LIMIT 1
     """, (candidate_name,))
 
     data = local_cursor.fetchone()
@@ -406,8 +408,7 @@ def download_report(candidate_name):
     if not data:
         return "Candidate Not Found"
 
-    # Floor old unrescaled scores (anything below 62 predates the rescaling feature)
-    display_score = max(round(float(data[1]), 2), 62)
+    display_score = round(float(data[1]), 2)
 
     file_name = f"{candidate_name}_report.pdf"
 
