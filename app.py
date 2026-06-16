@@ -262,9 +262,9 @@ def index():
 
             feedback = []
 
-            if score >= 80:
+            if score >= 88:
                 feedback.append("Excellent match for the role.")
-            elif score >= 50:
+            elif score >= 74:
                 feedback.append("Good profile but can improve.")
             else:
                 feedback.append("Needs more relevant skills.")
