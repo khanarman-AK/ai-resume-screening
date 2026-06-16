@@ -22,11 +22,17 @@ def final_score(resume_text, job_desc, resume_skills, jd_skills):
     similarity_score = calculate_similarity(resume_text, job_desc)
 
     matched_skills = set(resume_skills) & set(jd_skills)
+    n_matched = len(matched_skills)
 
-    skill_score = (len(matched_skills) / len(jd_skills)) * 100 if jd_skills else 0
+    skill_score = (n_matched / len(jd_skills)) * 100 if jd_skills else 0
 
-    raw = (0.7 * similarity_score) + (0.3 * skill_score)
+    raw = (0.5 * similarity_score) + (0.5 * skill_score)
 
     scaled = rescale(raw)
 
-    return scaled, list(matched_skills)
+    # Each matched skill guarantees a rising floor:
+    # 0 skills→62, 1→65, 2→68, 3→71, 4→74, 5→77, 6→80, 7→83, 8+→85 (capped)
+    skill_floor = min(MIN_SCORE + n_matched * 3, 85)
+    scaled = max(scaled, skill_floor)
+
+    return round(min(scaled, 100), 2), list(matched_skills)
