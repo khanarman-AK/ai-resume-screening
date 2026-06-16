@@ -187,10 +187,14 @@
             <input type="hidden" name="t" value="{{ t }}">
 
             <label for="jd">Job Description</label>
+            <div style="background:#f0f4ff;border:1.5px solid #c7d2fe;border-radius:10px;padding:12px 14px;font-size:13px;color:#4338ca;margin-bottom:10px;display:flex;align-items:flex-start;gap:10px;">
+                <span style="font-size:16px;flex-shrink:0;">✨</span>
+                <span><strong>Smart Role Detection:</strong> Just mention the role (e.g. "Finance Analyst", "Software Engineer", "HR Manager") and required skills are auto-populated — no manual listing needed.</span>
+            </div>
             <textarea
                 id="jd"
                 name="job_description"
-                placeholder="Paste the full job description here…"
+                placeholder="e.g. We are hiring a Finance Analyst to join our team…"
             ></textarea>
 
             <div class="file-section">

@@ -24,6 +24,7 @@ from utils.parser import (
 )
 
 from utils.similarity import final_score
+from utils.role_skills import detect_role_skills
 
 from reportlab.platypus import (
     SimpleDocTemplate,
@@ -238,6 +239,9 @@ def index():
         files = request.files.getlist("resumes")
         results = []
 
+        # Detect role once for the whole job description
+        detected_role, role_skills = detect_role_skills(job_desc)
+
         for file in files:
 
             if file.filename == "":
@@ -254,6 +258,10 @@ def index():
 
             resume_skills = extract_skills_nlp(cleaned)
             jd_skills = extract_skills_nlp(job_desc.lower())
+
+            # Merge auto-injected role skills with explicitly extracted ones
+            jd_skills = list(set(jd_skills) | set(role_skills))
+
             questions = generate_questions(resume_skills)
 
             score, matched = final_score(
@@ -322,6 +330,8 @@ def index():
             chart_scores=chart_scores,
             skill_labels=list(skill_counts.keys()),
             skill_values=list(skill_counts.values()),
+            detected_role=detected_role,
+            role_skills=role_skills,
             username=user,
             t=t
         )
