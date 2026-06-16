@@ -1,9 +1,14 @@
-import math
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 MIN_SCORE = 62
 MAX_SCORE = 100
+
+# ── Strict floor table ────────────────────────────────────────────────────────
+# Each matched skill earns a MINIMUM score. Low matches stay low.
+#  0 → 62 | 1 → 63 | 2 → 65 | 3 → 67 | 4 → 70
+#  5 → 74 | 6 → 78 | 7 → 82 | 8 → 84 | 9+ → 86 (capped)
+SKILL_FLOORS = [62, 63, 65, 67, 70, 74, 78, 82, 84, 86]
 
 
 def calculate_similarity(resume_text, job_desc):
@@ -14,7 +19,7 @@ def calculate_similarity(resume_text, job_desc):
 
 
 def rescale(raw):
-    """Rescale a 0–100 raw score to the MIN_SCORE–100 range."""
+    """Rescale a 0–100 raw score into the MIN_SCORE–100 range."""
     return MIN_SCORE + (raw / 100) * (MAX_SCORE - MIN_SCORE)
 
 
@@ -24,31 +29,24 @@ def final_score(resume_text, job_desc, resume_skills, jd_skills):
 
     matched_skills = set(resume_skills) & set(jd_skills)
     n_matched = len(matched_skills)
-    total = len(jd_skills)
+    total     = len(jd_skills)
 
-    # ── Smart skill score using sqrt scaling ──────────────────────────────────
-    # sqrt(ratio) rewards partial matches fairly:
-    #   3/15 (20%) → sqrt(0.20) = 44.7%   (not penalised harshly)
-    #   5/15 (33%) → sqrt(0.33) = 57.7%   (solid match)
-    #   7/15 (47%) → sqrt(0.47) = 68.6%   (strong candidate)
-    #  10/15 (67%) → sqrt(0.67) = 81.9%   (very strong)
-    #  15/15 (100%)→ sqrt(1.00) = 100%    (perfect)
-    if total > 0:
-        ratio = n_matched / total
-        skill_score = math.sqrt(ratio) * 100
-    else:
-        skill_score = 0
+    # ── Linear skill score (strict — no sqrt boost) ───────────────────────────
+    # Candidates earn exactly what their match ratio deserves.
+    #   3/15 (20%) →  20   low, stays low
+    #   5/15 (33%) →  33   moderate
+    #   7/15 (47%) →  47   solid
+    #  10/15 (67%) →  67   strong
+    #  15/15 (100%)→ 100   perfect
+    skill_score = (n_matched / total * 100) if total > 0 else 0
 
-    # Skills count 65%, text similarity 35%
-    raw = (0.35 * similarity_score) + (0.65 * skill_score)
+    # 40% text similarity + 60% skill match
+    raw    = (0.40 * similarity_score) + (0.60 * skill_score)
     scaled = rescale(raw)
 
-    # ── Matched-skill floor ───────────────────────────────────────────────────
-    # Think like a recruiter: a candidate with 5+ core skills can be trained
-    # on the rest. Give them a fair baseline.
-    #  0 → 62 | 1 → 65 | 2 → 68 | 3 → 72 | 4 → 75
-    #  5 → 79 | 6 → 83 | 7 → 86 | 8+ capped at 88
-    skill_floor = min(62 + n_matched * 3.5, 88)
-    scaled = max(scaled, skill_floor)
+    # ── Strict floor: don't let low-skill candidates score too high ───────────
+    idx   = min(n_matched, len(SKILL_FLOORS) - 1)
+    floor = SKILL_FLOORS[idx]
+    scaled = max(scaled, floor)
 
     return round(min(scaled, 100), 2), list(matched_skills)
