@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.local/
+flask_sessions/
+.env
+test.db
+database.db
